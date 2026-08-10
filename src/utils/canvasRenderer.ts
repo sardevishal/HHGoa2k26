@@ -4,40 +4,39 @@ import {
   drawCroppedImage,
   roundedRect,
   drawGrain,
-  drawDotGrid,
   truncateText,
-  wrapText,
 } from './cropUtils';
 
-// ── Exact reference color palette ──────────────────────────────────────────
 const C = {
-  bg: '#0a0c0e',           // dark forest green
-  bgDeep: '#08090b',       // deeper green for card interior
-  bgPanel: '#12161a',      // slightly lighter panel
-  bgShipping: '#12161a',   // shipping panel bg
-  mustard: '#c8ff3d',      // warm mustard/gold — primary accent
-  mustardLight: '#e4ff8a', // lighter gold for name
-  mustardDim: '#7da31c',   // dim gold for borders
-  cream: '#f5f5f0',        // warm cream text
-  creamDim: 'rgba(245,245,240,0.6)',
-  pink: '#ff7043',         // hot pink — builder title
-  pinkDim: 'rgba(255,112,67,0.4)',
-  teal: '#a9adb4',         // teal — role badge
-  tealDim: 'rgba(169,173,180,0.25)',
-  green: '#3a4148',        // forest green for wave/nature
-  greenLight: '#525b64',
-  dark: '#0a0c0e',
+  bg: '#173C2E',
+  bgDeep: '#0f2a1f',
+  bgPanel: '#1e4a38',
+  gold: '#FFE100',       // Bright vibrant gold matching official site
+  goldLight: '#FFF066',
+  goldDim: '#8a620d',
+  pink: '#FF007F',       // Vibrant neon pink matching official site
+  pinkDim: 'rgba(255,0,127,0.4)',
+  teal: '#3F9C8C',
+  cream: '#F3E9D2',
+  creamDim: 'rgba(243,233,210,0.6)',
+  green: '#2d6a4f',
+  greenLight: '#40916c',
+  dark: '#0a1f14',
   white: '#ffffff',
   black: '#000000',
 };
 
 async function generateQRDataURL(url: string): Promise<HTMLImageElement | null> {
+  const targetUrl = (url && url.trim().length > 0) 
+    ? (url.startsWith('http') ? url : `https://github.com/${url.replace(/^@/, '')}`)
+    : 'https://github.com/sardevishal';
+
   try {
-    const dataUrl = await QRCode.toDataURL(url, {
-      width: 160,
+    const dataUrl = await QRCode.toDataURL(targetUrl, {
+      width: 320,
       margin: 1,
       color: { dark: C.black, light: C.white },
-      errorCorrectionLevel: 'M',
+      errorCorrectionLevel: 'H',
     });
     return new Promise((resolve) => {
       const img = new Image();
@@ -56,13 +55,18 @@ function font(size: number, weight: string, family: string): string {
 
 async function waitForFonts() {
   if (typeof document !== 'undefined' && document.fonts) {
-    try { await document.fonts.ready; } catch { /* ignore */ }
+    try {
+      await Promise.all([
+        document.fonts.load('78px "Bodoni Moda"'),
+        document.fonts.load('72px "Rozha One"'),
+        document.fonts.load('72px "Alfa Slab One"'),
+        document.fonts.load('16px "Space Mono"'),
+        document.fonts.ready,
+      ]);
+    } catch { /* ignore */ }
   }
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-//  BUILDER ID CARD  1080 × 1350
-// ══════════════════════════════════════════════════════════════════════════════
 export async function renderBuilderCard(
   profileImg: HTMLImageElement | null,
   profile: ProfileData,
@@ -81,310 +85,279 @@ export async function renderBuilderCard(
   ctx.fillStyle = C.bg;
   ctx.fillRect(0, 0, W, H);
 
-  // Subtle dot grid watermark
-  drawDotGrid(ctx, W, H, 28, 'rgba(243,233,210,0.04)');
-  drawGrain(ctx, W, H, 0.02);
-
-  // Subtle radial vignette (top warm glow)
-  const topGlow = ctx.createRadialGradient(W / 2, 0, 0, W / 2, 0, 600);
-  topGlow.addColorStop(0, 'rgba(227,167,48,0.06)');
-  topGlow.addColorStop(1, 'rgba(0,0,0,0)');
-  ctx.fillStyle = topGlow;
-  ctx.fillRect(0, 0, W, H);
-
-  // ── Top header bar ─────────────────────────────────────────────────────────
-  const headerH = 72;
-  ctx.fillStyle = 'rgba(10,31,20,0.6)';
-  ctx.fillRect(0, 0, W, headerH);
-
-  // Top gold line
-  ctx.fillStyle = C.mustard;
-  ctx.fillRect(0, 0, W, 2);
-
-  // Header text
-  ctx.fillStyle = C.creamDim;
-  ctx.font = font(11, '500', 'IBM Plex Mono, monospace');
-  ctx.textAlign = 'center';
-  ctx.fillText('✦  HACKER HOUSE GOA 2026  ·  BUILDER RESIDENCY PASS  ✦', W / 2, 36);
-
-  // Decorative tick marks on header
-  ctx.strokeStyle = C.mustardDim;
+  // Radial Sunburst
+  ctx.save();
+  ctx.translate(W / 2, H / 2 - 200);
   ctx.lineWidth = 1;
-  for (let x = 0; x < W; x += 40) {
+  ctx.strokeStyle = 'rgba(63, 156, 140, 0.15)';
+  for (let i = 0; i < 60; i++) {
     ctx.beginPath();
-    ctx.moveTo(x, 60);
-    ctx.lineTo(x, 68);
+    ctx.moveTo(0, 0);
+    ctx.lineTo(Math.cos(i * Math.PI / 30) * W, Math.sin(i * Math.PI / 30) * W);
     ctx.stroke();
   }
-  ctx.strokeStyle = C.mustard;
-  ctx.lineWidth = 1.5;
+  ctx.restore();
+
+  // ASCII Palm Trees
+  drawAsciiPalms(ctx, W);
+  
+  // Grain
+  drawGrain(ctx, W, H, 0.015);
+
+  // ── Top Header Hook and Pill ───────────────────────────────────────────────
+  // Outer frame border
+  ctx.strokeStyle = C.gold;
+  ctx.lineWidth = 4;
+  roundedRect(ctx, 24, 24, W - 48, H - 48, 24);
+  ctx.stroke();
+  
+  ctx.strokeStyle = 'rgba(255,225,0,0.3)';
+  ctx.lineWidth = 1;
+  roundedRect(ctx, 32, 32, W - 64, H - 64, 18);
+  ctx.stroke();
+
+  // Top Hook
+  ctx.fillStyle = C.bgDeep;
   ctx.beginPath();
-  ctx.moveTo(0, 72);
-  ctx.lineTo(W, 72);
+  ctx.arc(W / 2, 44, 20, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = C.black;
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.arc(W / 2, 44, 12, 0, Math.PI * 2);
   ctx.stroke();
 
-  // ── Profile image (large, top center, rectangular with gold border) ────────
-  const imgPad = 52;
-  const imgX = imgPad;
-  const imgY = 96;
-  const imgW = W - imgPad * 2;
-  const imgH = 520;
-  const imgR = 18;
-
-  // Image glow
-  ctx.shadowColor = C.mustard;
-  ctx.shadowBlur = 24;
-  ctx.strokeStyle = C.mustard;
-  ctx.lineWidth = 3;
-  roundedRect(ctx, imgX - 1.5, imgY - 1.5, imgW + 3, imgH + 3, imgR + 2);
+  // Top Pill
+  const pillY = 70;
+  ctx.fillStyle = C.bgDeep;
+  ctx.strokeStyle = C.goldDim;
+  ctx.lineWidth = 2;
+  roundedRect(ctx, 60, pillY, W - 120, 36, 8);
+  ctx.fill();
   ctx.stroke();
-  ctx.shadowBlur = 0;
+
+  ctx.fillStyle = C.gold;
+  ctx.font = font(14, '700', 'Space Mono, monospace');
+  ctx.textAlign = 'center';
+  ctx.fillText('🌴  HACKER HOUSE GOA 2026  •  BUILDER RESIDENCY PASS  🌴', W / 2, pillY + 23);
+
+  // ── Profile Image ──────────────────────────────────────────────────────────
+  const imgSize = 460;
+  const imgX = (W - imgSize) / 2;
+  const imgY = 125;
+  const imgR = 20;
+
+  // Pink targeting brackets
+  const bracketLen = 40;
+  ctx.strokeStyle = C.pink;
+  ctx.lineWidth = 4;
+  
+  // TL
+  ctx.beginPath(); ctx.moveTo(imgX - 12 + bracketLen, imgY - 12); ctx.lineTo(imgX - 12, imgY - 12); ctx.lineTo(imgX - 12, imgY - 12 + bracketLen); ctx.stroke();
+  // TR
+  ctx.beginPath(); ctx.moveTo(imgX + imgSize + 12 - bracketLen, imgY - 12); ctx.lineTo(imgX + imgSize + 12, imgY - 12); ctx.lineTo(imgX + imgSize + 12, imgY - 12 + bracketLen); ctx.stroke();
+  // BL
+  ctx.beginPath(); ctx.moveTo(imgX - 12 + bracketLen, imgY + imgSize + 12); ctx.lineTo(imgX - 12, imgY + imgSize + 12); ctx.lineTo(imgX - 12, imgY + imgSize + 12 - bracketLen); ctx.stroke();
+  // BR
+  ctx.beginPath(); ctx.moveTo(imgX + imgSize + 12 - bracketLen, imgY + imgSize + 12); ctx.lineTo(imgX + imgSize + 12, imgY + imgSize + 12); ctx.lineTo(imgX + imgSize + 12, imgY + imgSize + 12 - bracketLen); ctx.stroke();
+
+  // Yellow thin border behind image
+  ctx.strokeStyle = C.goldLight;
+  ctx.lineWidth = 4;
+  roundedRect(ctx, imgX - 2, imgY - 2, imgSize + 4, imgSize + 4, imgR + 2);
+  ctx.stroke();
 
   if (profileImg) {
-    drawCroppedImage(ctx, profileImg, crop, imgX, imgY, imgW, imgH, imgR);
+    drawCroppedImage(ctx, profileImg, crop, imgX, imgY, imgSize, imgSize, imgR);
   } else {
-    ctx.fillStyle = C.bgDeep;
-    roundedRect(ctx, imgX, imgY, imgW, imgH, imgR);
+    ctx.fillStyle = C.bgPanel;
+    roundedRect(ctx, imgX, imgY, imgSize, imgSize, imgR);
     ctx.fill();
-    ctx.fillStyle = C.mustardDim;
-    ctx.font = font(20, '500', 'IBM Plex Mono, monospace');
-    ctx.textAlign = 'center';
-    ctx.fillText('Upload your photo', W / 2, imgY + imgH / 2);
   }
 
-  // Corner decorators on image border
-  drawCornerTick(ctx, imgX, imgY, 20, C.mustard);
-  drawCornerTick(ctx, imgX + imgW, imgY, 20, C.mustard, 'tr');
-  drawCornerTick(ctx, imgX, imgY + imgH, 20, C.mustard, 'bl');
-  drawCornerTick(ctx, imgX + imgW, imgY + imgH, 20, C.mustard, 'br');
-
-  // ── Age badge on bottom-right of image ─────────────────────────────────────
+  // Age Badge
   if (profile.age) {
-    const ageR = 38;
-    const ageCX = imgX + imgW - ageR - 12;
-    const ageCY = imgY + imgH - ageR - 12;
+    const ageR = 44;
+    const ageCX = imgX + imgSize - 20;
+    const ageCY = imgY + imgSize - 20;
 
     ctx.fillStyle = C.pink;
     ctx.beginPath();
     ctx.arc(ageCX, ageCY, ageR, 0, Math.PI * 2);
     ctx.fill();
-
-    // Thin gold ring
-    ctx.strokeStyle = C.mustard;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(ageCX, ageCY, ageR + 4, 0, Math.PI * 2);
+    ctx.strokeStyle = C.white;
+    ctx.lineWidth = 3;
     ctx.stroke();
 
     ctx.fillStyle = C.white;
-    ctx.font = font(22, '900', 'IBM Plex Sans, sans-serif');
+    ctx.font = font(32, '900', 'Alfa Slab One, sans-serif');
     ctx.textAlign = 'center';
-    ctx.fillText(profile.age, ageCX, ageCY + 4);
-
-    ctx.fillStyle = 'rgba(255,255,255,0.75)';
-    ctx.font = font(8, '600', 'IBM Plex Mono, monospace');
-    ctx.fillText('YRS', ageCX, ageCY + 18);
+    ctx.fillText(profile.age, ageCX, ageCY + 8);
+    
+    ctx.font = font(11, '700', 'Space Mono, monospace');
+    ctx.fillText('YRS OLD', ageCX, ageCY + 24);
   }
 
-  // ── NAME ───────────────────────────────────────────────────────────────────
-  const nameY = imgY + imgH + 62;
+  // ── Typography Section ─────────────────────────────────────────────────────
+  let currentY = imgY + imgSize + 65;
+
+  // NAME
+  ctx.fillStyle = C.gold;
   const nameStr = (profile.name || 'YOUR NAME').toUpperCase();
-
+  ctx.font = font(72, '400', 'Alfa Slab One, sans-serif');
+  // Block shadow
+  ctx.shadowColor = 'rgba(0,0,0,0.6)';
+  ctx.shadowOffsetY = 5;
   ctx.textAlign = 'center';
-  let nameSz = 110;
-  ctx.font = font(nameSz, '900', 'Barlow Condensed, sans-serif');
-  while (ctx.measureText(nameStr).width > W - 100 && nameSz > 48) {
-    nameSz -= 2;
-    ctx.font = font(nameSz, '900', 'Barlow Condensed, sans-serif');
+  ctx.fillText(truncateText(ctx, nameStr, W - 100), W / 2, currentY);
+  ctx.shadowOffsetY = 0;
+  ctx.shadowColor = 'transparent';
+  currentY += 40;
+
+  // ROLE PILL
+  if (profile.role) {
+    const roleStr = profile.role.toUpperCase();
+    ctx.font = font(16, '700', 'Space Mono, monospace');
+    const roleW = Math.min(ctx.measureText(`⚙  ${roleStr}`).width + 40, W - 120);
+    const roleX = W / 2 - roleW / 2;
+    
+    ctx.fillStyle = C.bgDeep;
+    ctx.strokeStyle = C.greenLight;
+    ctx.lineWidth = 2;
+    roundedRect(ctx, roleX, currentY, roleW, 38, 8);
+    ctx.fill(); ctx.stroke();
+    
+    ctx.fillStyle = C.cream;
+    ctx.textAlign = 'center';
+    ctx.fillText(truncateText(ctx, `⚙  ${roleStr}`, roleW - 20), W / 2, currentY + 25);
+    currentY += 50;
   }
-  // Drop shadow
-  ctx.shadowColor = 'rgba(0,0,0,0.4)';
-  ctx.shadowBlur = 8;
-  ctx.shadowOffsetY = 3;
-  ctx.fillStyle = C.mustard;
-  ctx.fillText(nameStr, W / 2, nameY);
+
+  // TITLE
+  if (profile.builderTitle) {
+    currentY += 5;
+    ctx.fillStyle = C.pink;
+    ctx.font = `italic ${font(22, '700', 'Space Grotesk, sans-serif')}`;
+    ctx.textAlign = 'center';
+    ctx.fillText(truncateText(ctx, `⚡  ${profile.builderTitle}  ⚡`, W - 120), W / 2, currentY + 18);
+    currentY += 45;
+  }
+
+  // SHIPPING PANEL
+  const shippingPad = 120;
+  const shippingW = W - shippingPad * 2;
+  ctx.fillStyle = C.bgDeep;
+  ctx.strokeStyle = C.pink;
+  ctx.lineWidth = 2;
+  roundedRect(ctx, shippingPad, currentY, shippingW, 76, 12);
+  ctx.fill(); ctx.stroke();
+
+  ctx.fillStyle = C.pink;
+  ctx.font = font(11, '700', 'Space Mono, monospace');
+  ctx.textAlign = 'center';
+  ctx.fillText('🚀 CURRENTLY SHIPPING AT HH GOA', W / 2, currentY + 24);
+
+  ctx.fillStyle = C.white;
+  ctx.font = font(24, '700', 'Space Mono, monospace');
+  const shippingText = profile.currentlyShipping || 'Something incredible...';
+  ctx.fillText(truncateText(ctx, shippingText, shippingW - 40), W / 2, currentY + 56);
+  currentY += 95;
+
+  // EVENT PILLS (Positioned safely above separator and mountains)
+  const pills = [
+    '🏝️ BEACH & CODE',
+    '🗓️ OCT 28-31, 2026',
+    '🌊 GOA RESIDENCY',
+  ];
+  ctx.font = font(14, '700', 'Space Mono, monospace');
+  const pillWidths = pills.map(p => ctx.measureText(p).width + 30);
+  const totalPillW = pillWidths.reduce((a, b) => a + b, 0) + 32; // 16px gap
+  
+  let pillX = (W - totalPillW) / 2;
+  for (let i = 0; i < pills.length; i++) {
+    ctx.fillStyle = C.bgDeep;
+    ctx.strokeStyle = C.gold;
+    ctx.lineWidth = 1.5;
+    roundedRect(ctx, pillX, currentY, pillWidths[i], 36, 18);
+    ctx.fill(); ctx.stroke();
+    
+    ctx.fillStyle = C.cream;
+    ctx.textAlign = 'center';
+    ctx.fillText(pills[i], pillX + pillWidths[i] / 2, currentY + 23);
+    pillX += pillWidths[i] + 16;
+  }
+
+  // ── Separator Line ────────────────────────────────────────────────────────
+  const lineY = currentY + 60;
+  ctx.strokeStyle = C.gold;
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(200, lineY); ctx.lineTo(W - 200, lineY); ctx.stroke();
+  ctx.fillStyle = C.gold;
+  drawDiamond(ctx, 200, lineY, 5);
+  drawDiamond(ctx, W - 200, lineY, 5);
+
+  // ── Bottom Angular Mountains (Rendered BELOW the separator line) ─────────
+  drawMountains(ctx, W, H, lineY + 20);
+
+  // ── Bottom Official Branding Area (Matches Official Website Logo) ──────────
+  const bottomY = H - 150;
+
+  // Verified Badge (Left)
+  const badgeX = 140;
+  const badgeY = bottomY + 20;
+  drawVerifiedBadge(ctx, badgeX, badgeY);
+
+  // HACKER HOUSE Official Logo (Center - Bodoni Moda Didone Serif)
+  ctx.fillStyle = C.gold;
+  ctx.font = font(78, '900', 'Bodoni Moda, Didot, Georgia, serif');
+  ctx.textAlign = 'center';
+  ctx.shadowColor = 'rgba(0,0,0,0.5)';
+  ctx.shadowOffsetY = 4;
+  ctx.shadowBlur = 4;
+  ctx.fillText('HACKER HOUSE', W / 2, bottomY - 5);
   ctx.shadowBlur = 0;
   ctx.shadowOffsetY = 0;
 
-  // ── Role pill ──────────────────────────────────────────────────────────────
-  const roleY = nameY + 28;
-  if (profile.role) {
-    const roleStr = profile.role.toUpperCase();
-    ctx.font = font(18, '700', 'IBM Plex Mono, monospace');
-    const roleW = Math.min(ctx.measureText(roleStr).width + 50, W - 100);
-    const roleX = W / 2 - roleW / 2;
-    const rolePillH = 42;
+  // Neon Hindi "गोवा" Overlay (Center - Rozha One Devanagari)
+  ctx.font = font(70, '700', 'Rozha One, Yatra One, Devanagari, serif');
+  ctx.strokeStyle = C.gold;
+  ctx.lineWidth = 3;
+  ctx.strokeText('गोवा', W / 2 + 10, bottomY - 15);
+  ctx.fillStyle = C.pink;
+  ctx.fillText('गोवा', W / 2 + 10, bottomY - 15);
 
-    ctx.fillStyle = C.teal;
-    roundedRect(ctx, roleX, roleY, roleW, rolePillH, rolePillH / 2);
-    ctx.fill();
-
-    ctx.fillStyle = C.white;
-    ctx.textAlign = 'center';
-    ctx.fillText(truncateText(ctx, roleStr, roleW - 50), W / 2, roleY + 27);
-  }
-
-  // ── Builder title (pink italic style) ─────────────────────────────────────
-  const titleY = roleY + 68;
-  if (profile.builderTitle) {
-    ctx.fillStyle = C.pink;
-    ctx.font = font(26, '600', 'IBM Plex Sans, sans-serif');
-    ctx.textAlign = 'center';
-    ctx.fillStyle = C.pink;
-    // Star decorators
-    const titleText = `✦ ${profile.builderTitle} ✦`;
-    ctx.fillText(truncateText(ctx, titleText, W - 80), W / 2, titleY);
-  }
-
-  // ── Currently shipping panel ───────────────────────────────────────────────
-  const shippingY = titleY + 36;
-  const shippingH = 88;
-  const shippingPad = 52;
-
-  // Panel background
-  ctx.fillStyle = C.bgDeep;
-  roundedRect(ctx, shippingPad, shippingY, W - shippingPad * 2, shippingH, 12);
-  ctx.fill();
-
-  // Left gold bar
-  ctx.fillStyle = C.mustard;
-  roundedRect(ctx, shippingPad, shippingY, 4, shippingH, 2);
-  ctx.fill();
-
-  // Label
-  ctx.fillStyle = C.mustard;
-  ctx.font = font(10, '700', 'IBM Plex Mono, monospace');
-  ctx.textAlign = 'left';
-  ctx.fillText('🚀 CURRENTLY SHIPPING', shippingPad + 20, shippingY + 22);
-
-  // Content
-  ctx.fillStyle = C.cream;
-  ctx.font = font(24, '500', 'IBM Plex Sans, sans-serif');
-  const shippingText = profile.currentlyShipping || 'Something incredible…';
-  wrapText(ctx, shippingText, shippingPad + 24, shippingY + 54, W - shippingPad * 2 - 48, 32, 2);
-
-  // ── Event info pills ───────────────────────────────────────────────────────
-  const pillsY = shippingY + shippingH + 28;
-  const pills = [
-    '🏖️  BEACH & CODE',
-    '📅  OCT 28–31, 2026',
-    '🌊  GOA RESIDENCY',
-  ];
-
-  ctx.font = font(18, '600', 'IBM Plex Mono, monospace');
-  let totalPillW = 0;
-  const pillWidths: number[] = [];
-  const pillPad = 32;
-  const pillH = 46;
-  const pillGap = 18;
-
-  for (const p of pills) {
-    const pw = ctx.measureText(p).width + pillPad * 2;
-    pillWidths.push(pw);
-    totalPillW += pw + pillGap;
-  }
-  totalPillW -= pillGap;
-
-  let pillX = (W - totalPillW) / 2;
-  for (let i = 0; i < pills.length; i++) {
-    const pw = pillWidths[i];
-    ctx.fillStyle = C.bgDeep;
-    ctx.strokeStyle = C.mustardDim;
-    ctx.lineWidth = 1.5;
-    roundedRect(ctx, pillX, pillsY, pw, pillH, pillH / 2);
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = C.cream;
-    ctx.textAlign = 'center';
-    ctx.fillText(pills[i], pillX + pw / 2, pillsY + 28);
-    pillX += pw + pillGap;
-  }
-
-  // ── Tropical wave / landscape bottom section ───────────────────────────────
-  const waveStartY = pillsY + pillH + 28;
-  drawTropicalScene(ctx, W, H, waveStartY);
-
-  // ── Bottom branding (on top of waves) ─────────────────────────────────────
-  const bottomY = H - 210;
-
-  // HH circle emblem left
-  const emblemCX = 120;
-  const emblemCY = bottomY + 70;
-  const emblemR = 52;
-
-  ctx.fillStyle = C.bg;
-  ctx.strokeStyle = C.mustard;
-  ctx.lineWidth = 2.5;
-  ctx.beginPath();
-  ctx.arc(emblemCX, emblemCY, emblemR, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
-
-  ctx.fillStyle = C.mustard;
-  ctx.font = font(26, '900', 'Barlow Condensed, sans-serif');
-  ctx.textAlign = 'center';
-  ctx.fillText('HH', emblemCX, emblemCY - 4);
-
-  ctx.fillStyle = C.creamDim;
-  ctx.font = font(9, '600', 'IBM Plex Mono, monospace');
-  ctx.fillText('2026', emblemCX, emblemCY + 16);
-
-  // HACKER HOUSE large text
-  ctx.fillStyle = C.mustard;
-  ctx.font = font(64, '900', 'Barlow Condensed, sans-serif');
-  ctx.textAlign = 'left';
-  ctx.shadowColor = 'rgba(0,0,0,0.5)';
-  ctx.shadowBlur = 8;
-  ctx.fillText('HACKER HOUSE', emblemCX + emblemR + 20, bottomY + 54);
-  ctx.shadowBlur = 0;
-
-  ctx.fillStyle = C.creamDim;
-  ctx.font = font(14, '500', 'IBM Plex Mono, monospace');
-  ctx.fillText(`28–31 OCTOBER 2026  ·  GOA, INDIA`, emblemCX + emblemR + 20, bottomY + 82);
+  // Sub-bar Text
+  ctx.fillStyle = C.gold;
+  ctx.font = font(15, '700', 'Space Mono, monospace');
+  ctx.fillText('GOA, INDIA   •   28 - 31 OCT 2026', W / 2, bottomY + 40);
 
   ctx.fillStyle = C.pink;
-  ctx.font = font(15, '700', 'IBM Plex Mono, monospace');
-  ctx.fillText('#FrameInGoa', emblemCX + emblemR + 20, bottomY + 108);
+  ctx.font = font(14, '700', 'Space Mono, monospace');
+  ctx.fillText('#FrameInGoa', W / 2, bottomY + 68);
 
-  // ── QR Code ────────────────────────────────────────────────────────────────
-  const qrSize = 120;
-  const qrX = W - qrSize - 52;
-  const qrY = bottomY + 14;
+  // QR Code Panel (Right - High contrast scanner ready)
+  const qrX = W - 230;
+  const qrY = bottomY - 60;
+  const qrW = 150;
+  const qrH = 180;
+  
+  ctx.fillStyle = C.white;
+  roundedRect(ctx, qrX, qrY, qrW, qrH, 12);
+  ctx.fill();
 
-  if (profile.githubUsername) {
-    const qrImg = await generateQRDataURL(`https://github.com/${profile.githubUsername}`);
-    if (qrImg) {
-      ctx.fillStyle = C.white;
-      roundedRect(ctx, qrX - 8, qrY - 8, qrSize + 16, qrSize + 28, 10);
-      ctx.fill();
-      ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
-      ctx.fillStyle = C.dark;
-      ctx.font = font(10, '700', 'IBM Plex Mono, monospace');
-      ctx.textAlign = 'center';
-      ctx.fillText(`@${profile.githubUsername}`, qrX + qrSize / 2, qrY + qrSize + 16);
-    }
-  } else {
-    ctx.fillStyle = C.bgDeep;
-    ctx.strokeStyle = C.mustardDim;
-    ctx.lineWidth = 1;
-    roundedRect(ctx, qrX, qrY, qrSize, qrSize, 10);
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = C.mustardDim;
-    ctx.font = font(10, '400', 'IBM Plex Mono, monospace');
-    ctx.textAlign = 'center';
-    ctx.fillText('GitHub QR', qrX + qrSize / 2, qrY + qrSize / 2 + 4);
+  const handle = profile.githubUsername || 'sardevishal';
+  const qrImg = await generateQRDataURL(handle);
+  if (qrImg) {
+    ctx.drawImage(qrImg, qrX + 10, qrY + 10, 130, 130);
   }
 
-  // ── Outer frame border ─────────────────────────────────────────────────────
-  ctx.strokeStyle = C.mustard;
-  ctx.lineWidth = 3;
-  ctx.strokeRect(6, 6, W - 12, H - 12);
-
-  // Inner accent border
-  ctx.strokeStyle = 'rgba(227,167,48,0.2)';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(12, 12, W - 24, H - 24);
+  ctx.fillStyle = C.black;
+  ctx.font = font(10, '700', 'Space Mono, monospace');
+  ctx.textAlign = 'center';
+  ctx.fillText('SCAN GITHUB', qrX + qrW / 2, qrY + 152);
+  ctx.fillStyle = '#333333';
+  ctx.font = font(10, '700', 'Space Mono, monospace');
+  ctx.fillText(`@${handle.replace(/^@/, '')}`, qrX + qrW / 2, qrY + 168);
 
   return canvas;
 }
@@ -394,7 +367,7 @@ export async function renderBuilderCard(
 // ══════════════════════════════════════════════════════════════════════════════
 export async function renderPFPFrame(
   profileImg: HTMLImageElement | null,
-  profile: ProfileData,
+  _profile: ProfileData,
   crop: CropSettings
 ): Promise<HTMLCanvasElement> {
   await waitForFonts();
@@ -406,43 +379,47 @@ export async function renderPFPFrame(
   canvas.height = H;
   const ctx = canvas.getContext('2d')!;
 
-  // ── Background ─────────────────────────────────────────────────────────────
   ctx.fillStyle = C.bg;
   ctx.fillRect(0, 0, W, H);
 
-  drawDotGrid(ctx, W, H, 28, 'rgba(243,233,210,0.035)');
-  drawGrain(ctx, W, H, 0.018);
-
-  // ── Bottom tropical scene (behind everything) ──────────────────────────────
-  drawPFPTropicalScene(ctx, W, H);
-
-  // ── Circular profile image ─────────────────────────────────────────────────
-  const circleR = 320;
-  const circleCX = W / 2;
-  const circleCY = H / 2 - 50;
-
-  // Outer ring decorations
-  ctx.strokeStyle = 'rgba(227,167,48,0.15)';
+  ctx.save();
+  ctx.translate(W / 2, H / 2);
   ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.arc(circleCX, circleCY, circleR + 40, 0, Math.PI * 2);
-  ctx.stroke();
+  ctx.strokeStyle = 'rgba(63, 156, 140, 0.15)';
+  for (let i = 0; i < 60; i++) {
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(Math.cos(i * Math.PI / 30) * W, Math.sin(i * Math.PI / 30) * W);
+    ctx.stroke();
+  }
+  ctx.restore();
 
-  // Gold ring
-  ctx.strokeStyle = C.mustard;
-  ctx.lineWidth = 4;
-  ctx.beginPath();
-  ctx.arc(circleCX, circleCY, circleR + 10, 0, Math.PI * 2);
-  ctx.stroke();
+  drawGrain(ctx, W, H, 0.015);
 
-  // Pink accent ring
+  const circleR = 360;
+  const circleCX = W / 2;
+  const circleCY = H / 2 - 40;
+
+  // Targeting Brackets inside PFP
   ctx.strokeStyle = C.pink;
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 6;
+  const br = circleR + 20;
+  const bL = 60;
+  // TL
+  ctx.beginPath(); ctx.moveTo(circleCX - br + bL, circleCY - br); ctx.lineTo(circleCX - br, circleCY - br); ctx.lineTo(circleCX - br, circleCY - br + bL); ctx.stroke();
+  // TR
+  ctx.beginPath(); ctx.moveTo(circleCX + br - bL, circleCY - br); ctx.lineTo(circleCX + br, circleCY - br); ctx.lineTo(circleCX + br, circleCY - br + bL); ctx.stroke();
+  // BL
+  ctx.beginPath(); ctx.moveTo(circleCX - br + bL, circleCY + br); ctx.lineTo(circleCX - br, circleCY + br); ctx.lineTo(circleCX - br, circleCY + br - bL); ctx.stroke();
+  // BR
+  ctx.beginPath(); ctx.moveTo(circleCX + br - bL, circleCY + br); ctx.lineTo(circleCX + br, circleCY + br); ctx.lineTo(circleCX + br, circleCY + br - bL); ctx.stroke();
+
+  ctx.strokeStyle = C.gold;
+  ctx.lineWidth = 8;
   ctx.beginPath();
-  ctx.arc(circleCX, circleCY, circleR + 18, 0, Math.PI * 2);
+  ctx.arc(circleCX, circleCY, circleR + 4, 0, Math.PI * 2);
   ctx.stroke();
 
-  // Clip and draw profile image in circle
   ctx.save();
   ctx.beginPath();
   ctx.arc(circleCX, circleCY, circleR, 0, Math.PI * 2);
@@ -455,82 +432,50 @@ export async function renderPFPFrame(
   } else {
     ctx.fillStyle = C.bgDeep;
     ctx.fill();
-    ctx.fillStyle = C.mustardDim;
-    ctx.font = font(22, '500', 'IBM Plex Mono, monospace');
-    ctx.textAlign = 'center';
-    ctx.fillText('Upload photo', circleCX, circleCY + 8);
   }
   ctx.restore();
 
-  // ── Top: #FrameInGoa badge ─────────────────────────────────────────────────
-  // Small tag line at top
-  ctx.fillStyle = 'rgba(10,31,20,0.8)';
-  roundedRect(ctx, W / 2 - 130, 38, 260, 38, 19);
+  // Top Hook Pill
+  const pillY = 30;
+  ctx.fillStyle = C.bgDeep;
+  ctx.strokeStyle = C.goldDim;
+  ctx.lineWidth = 2;
+  roundedRect(ctx, W / 2 - 140, pillY, 280, 44, 8);
   ctx.fill();
-  ctx.strokeStyle = C.mustard;
-  ctx.lineWidth = 1.5;
-  roundedRect(ctx, W / 2 - 130, 38, 260, 38, 19);
   ctx.stroke();
 
-  // Small HH icons
-  ctx.font = font(14, '600', 'IBM Plex Mono, monospace');
-  ctx.fillStyle = C.mustard;
+  ctx.fillStyle = C.gold;
+  ctx.font = font(16, '700', 'Space Mono, monospace');
   ctx.textAlign = 'center';
-  ctx.fillText('✦  #FrameInGoa  ✦', W / 2, 62);
+  ctx.fillText('🌴 #FrameInGoa 🌴', W / 2, pillY + 28);
 
-  // ── Bottom: HACKER HOUSE large text ───────────────────────────────────────
-  const hhY = H - 175;
-  ctx.fillStyle = C.mustard;
-  ctx.font = font(72, '900', 'Barlow Condensed, sans-serif');
+  // Bottom Official Logo Branding
+  const hhY = H - 120;
+  ctx.fillStyle = C.gold;
+  ctx.font = font(80, '900', 'Bodoni Moda, Didot, Georgia, serif');
   ctx.textAlign = 'center';
   ctx.shadowColor = 'rgba(0,0,0,0.6)';
-  ctx.shadowBlur = 12;
-  ctx.shadowOffsetY = 4;
+  ctx.shadowOffsetY = 6;
   ctx.fillText('HACKER HOUSE', W / 2, hhY);
-  ctx.shadowBlur = 0;
   ctx.shadowOffsetY = 0;
+  ctx.shadowColor = 'transparent';
 
-  // Name (if provided)
-  if (profile.name) {
-    ctx.fillStyle = C.cream;
-    ctx.font = font(42, '900', 'Barlow Condensed, sans-serif');
-    ctx.textAlign = 'center';
-    const nameStr = profile.name.toUpperCase();
-    while (ctx.measureText(nameStr).width > W - 120) {
-      // handled via truncation below
-    }
-    ctx.fillText(truncateText(ctx, nameStr, W - 120), W / 2, hhY + 50);
-  }
-
-  // Event info bottom strip
-  ctx.fillStyle = 'rgba(10,31,20,0.75)';
-  ctx.fillRect(0, H - 80, W, 80);
-
-  ctx.fillStyle = C.mustard;
-  ctx.lineWidth = 1.5;
-  ctx.strokeStyle = C.mustard;
-  ctx.beginPath();
-  ctx.moveTo(0, H - 80);
-  ctx.lineTo(W, H - 80);
-  ctx.stroke();
+  // Neon Hindi "गोवा" Overlay
+  ctx.font = font(72, '700', 'Rozha One, Yatra One, Devanagari, serif');
+  ctx.strokeStyle = C.gold;
+  ctx.lineWidth = 3;
+  ctx.strokeText('गोवा', W / 2 + 10, hhY - 10);
+  ctx.fillStyle = C.pink;
+  ctx.fillText('गोवा', W / 2 + 10, hhY - 10);
 
   ctx.fillStyle = C.cream;
-  ctx.font = font(18, '600', 'IBM Plex Mono, monospace');
-  ctx.textAlign = 'center';
-  ctx.fillText('28–31 OCTOBER 2026  ·  GOA, INDIA', W / 2, H - 44);
+  ctx.font = font(18, '700', 'Space Mono, monospace');
+  ctx.fillText('28–31 OCT 2026 • GOA, INDIA', W / 2, hhY + 50);
 
-  ctx.fillStyle = C.pink;
-  ctx.font = font(18, '600', 'IBM Plex Mono, monospace');
-  ctx.fillText('#HHGoa2026  ·  #FrameInGoa', W / 2, H - 22);
-
-  // ── Outer border ──────────────────────────────────────────────────────────
-  ctx.strokeStyle = C.mustard;
-  ctx.lineWidth = 3;
-  ctx.strokeRect(6, 6, W - 12, H - 12);
-
-  ctx.strokeStyle = 'rgba(227,167,48,0.2)';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(12, 12, W - 24, H - 24);
+  ctx.strokeStyle = C.gold;
+  ctx.lineWidth = 4;
+  roundedRect(ctx, 24, 24, W - 48, H - 48, 24);
+  ctx.stroke();
 
   return canvas;
 }
@@ -539,197 +484,114 @@ export async function renderPFPFrame(
 //  HELPERS
 // ══════════════════════════════════════════════════════════════════════════════
 
-/**
- * Draws the tropical wave + palm tree scene at the bottom of the Builder Card.
- */
-function drawTropicalScene(
-  ctx: CanvasRenderingContext2D,
-  W: number,
-  H: number,
-  startY: number
-) {
-  // Layered waves
-  // Wave 1 — darkest back layer
-  ctx.fillStyle = '#07080a';
+function drawMountains(ctx: CanvasRenderingContext2D, W: number, H: number, startY: number) {
+  // Back mountain (darkest)
+  ctx.fillStyle = '#102818';
   ctx.beginPath();
-  ctx.moveTo(0, startY + 40);
-  for (let x = 0; x <= W; x += 80) {
-    const yOff = Math.sin((x / W) * Math.PI * 2.2) * 22;
-    ctx.quadraticCurveTo(x + 40, startY + 40 + yOff - 22, x + 80, startY + 40 + yOff);
-  }
+  ctx.moveTo(0, startY + 50);
+  ctx.lineTo(250, startY - 10);
+  ctx.lineTo(550, startY + 40);
+  ctx.lineTo(850, startY - 20);
+  ctx.lineTo(W, startY + 30);
   ctx.lineTo(W, H);
   ctx.lineTo(0, H);
-  ctx.closePath();
   ctx.fill();
 
-  // Wave 2 — mid layer
-  ctx.fillStyle = '#0a0c0e';
+  // Mid mountain
+  ctx.fillStyle = '#173c2e';
   ctx.beginPath();
-  ctx.moveTo(0, startY + 80);
-  for (let x = 0; x <= W; x += 80) {
-    const yOff = Math.sin((x / W) * Math.PI * 2.8 + 0.8) * 16;
-    ctx.quadraticCurveTo(x + 40, startY + 80 + yOff - 16, x + 80, startY + 80 + yOff);
-  }
+  ctx.moveTo(0, startY + 90);
+  ctx.lineTo(350, startY + 30);
+  ctx.lineTo(650, startY + 80);
+  ctx.lineTo(950, startY + 20);
+  ctx.lineTo(W, startY + 70);
   ctx.lineTo(W, H);
   ctx.lineTo(0, H);
-  ctx.closePath();
   ctx.fill();
 
-  // Wave 3 — front lighter layer
-  ctx.fillStyle = '#12161a';
+  // Front mountain
+  ctx.fillStyle = '#2d6a4f';
   ctx.beginPath();
-  ctx.moveTo(0, startY + 120);
-  for (let x = 0; x <= W; x += 80) {
-    const yOff = Math.sin((x / W) * Math.PI * 3.2 + 1.4) * 12;
-    ctx.quadraticCurveTo(x + 40, startY + 120 + yOff - 12, x + 80, startY + 120 + yOff);
-  }
+  ctx.moveTo(0, startY + 160);
+  ctx.lineTo(150, startY + 110);
+  ctx.lineTo(450, startY + 180);
+  ctx.lineTo(800, startY + 90);
+  ctx.lineTo(W, startY + 150);
   ctx.lineTo(W, H);
   ctx.lineTo(0, H);
-  ctx.closePath();
   ctx.fill();
-
-  // Palm trees (silhouette style)
-  drawPalmTree(ctx, 80, startY + 20, 140, 'rgba(18,22,26,0.85)');
-  drawPalmTree(ctx, W - 100, startY + 30, 130, 'rgba(18,22,26,0.85)', true);
-  drawPalmTree(ctx, 200, startY + 60, 90, 'rgba(18,22,26,0.6)');
-  drawPalmTree(ctx, W - 220, startY + 70, 85, 'rgba(18,22,26,0.6)', true);
-
-  // Horizontal separator line at wave top
-  ctx.strokeStyle = C.mustardDim;
-  ctx.lineWidth = 1;
-  ctx.setLineDash([6, 12]);
-  ctx.beginPath();
-  ctx.moveTo(52, startY + 8);
-  ctx.lineTo(W - 52, startY + 8);
-  ctx.stroke();
-  ctx.setLineDash([]);
-
-  // Small diamond on separator
-  ctx.fillStyle = C.mustard;
-  drawDiamond(ctx, W / 2, startY + 8, 6);
 }
 
-/**
- * Tropical scene for PFP frame background.
- */
-function drawPFPTropicalScene(
-  ctx: CanvasRenderingContext2D,
-  W: number,
-  H: number
-) {
-  const waveStart = H * 0.62;
-
-  // Background wave layers
-  ctx.fillStyle = '#07080a';
-  ctx.beginPath();
-  ctx.moveTo(0, waveStart);
-  for (let x = 0; x <= W; x += 100) {
-    ctx.quadraticCurveTo(x + 50, waveStart - 30 * Math.sin((x / W) * Math.PI * 2), x + 100, waveStart);
-  }
-  ctx.lineTo(W, H);
-  ctx.lineTo(0, H);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.fillStyle = '#0a0c0e';
-  ctx.beginPath();
-  ctx.moveTo(0, waveStart + 50);
-  for (let x = 0; x <= W; x += 100) {
-    ctx.quadraticCurveTo(x + 50, waveStart + 50 - 20 * Math.sin((x / W) * Math.PI * 3 + 1), x + 100, waveStart + 50);
-  }
-  ctx.lineTo(W, H);
-  ctx.lineTo(0, H);
-  ctx.closePath();
-  ctx.fill();
-
-  // Palm trees — left and right silhouettes
-  drawPalmTree(ctx, 60, waveStart - 60, 180, 'rgba(18,22,26,0.9)');
-  drawPalmTree(ctx, W - 80, waveStart - 50, 170, 'rgba(18,22,26,0.9)', true);
-  drawPalmTree(ctx, 170, waveStart + 10, 120, 'rgba(18,22,26,0.7)');
-  drawPalmTree(ctx, W - 190, waveStart + 20, 110, 'rgba(18,22,26,0.7)', true);
-}
-
-/**
- * Draws a stylized palm tree silhouette.
- */
-function drawPalmTree(
-  ctx: CanvasRenderingContext2D,
-  baseX: number,
-  groundY: number,
-  height: number,
-  color: string,
-  flip = false
-) {
-  const dir = flip ? -1 : 1;
-
-  // Trunk — slightly curved
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.moveTo(baseX - 6, groundY);
-  ctx.quadraticCurveTo(baseX + dir * 15, groundY - height * 0.5, baseX + dir * 8, groundY - height);
-  ctx.quadraticCurveTo(baseX + dir * 12, groundY - height + 4, baseX + dir * 18, groundY - height);
-  ctx.quadraticCurveTo(baseX + dir * 20, groundY - height * 0.5, baseX + 6, groundY);
-  ctx.closePath();
-  ctx.fill();
-
-  // Fronds
-  const tipX = baseX + dir * 12;
-  const tipY = groundY - height;
-
-  const fronds = [
-    { angle: flip ? 200 : -20, length: height * 0.5 },
-    { angle: flip ? 170 : 10,  length: height * 0.42 },
-    { angle: flip ? 140 : 40,  length: height * 0.38 },
-    { angle: flip ? 230 : -50, length: height * 0.40 },
-    { angle: flip ? 110 : 70,  length: height * 0.30 },
-    { angle: flip ? 260 : -80, length: height * 0.28 },
+function drawAsciiPalms(ctx: CanvasRenderingContext2D, W: number) {
+  ctx.fillStyle = 'rgba(63, 156, 140, 0.12)';
+  ctx.font = font(12, '700', 'Space Mono, monospace');
+  ctx.textAlign = 'left';
+  
+  const tree = [
+    "      HHHHHH      ",
+    "   HHHHHHHHHHHH   ",
+    "  HHHHH    HHHHH  ",
+    " HHH          HHH ",
+    " HH            HH ",
+    "        HH        ",
+    "        HH        ",
+    "        HH        ",
+    "        HH        ",
+    "        HH        ",
+    "        HH        ",
+    "        HH        "
   ];
 
-  for (const f of fronds) {
-    const rad = (f.angle * Math.PI) / 180;
-    const ex = tipX + Math.cos(rad) * f.length;
-    const ey = tipY + Math.sin(rad) * f.length;
-    const midX = tipX + Math.cos(rad) * f.length * 0.5 + Math.cos(rad + Math.PI / 2) * 18;
-    const midY = tipY + Math.sin(rad) * f.length * 0.5 + Math.sin(rad + Math.PI / 2) * 18;
+  // Draw left tree
+  tree.forEach((line, i) => {
+    ctx.fillText(line, 40, 280 + i * 16);
+    ctx.fillText(line, 60, 560 + i * 16);
+  });
 
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 6;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(tipX, tipY);
-    ctx.quadraticCurveTo(midX, midY, ex, ey);
-    ctx.stroke();
-  }
+  // Draw right tree
+  tree.forEach((line, i) => {
+    ctx.fillText(line, W - 220, 240 + i * 16);
+    ctx.fillText(line, W - 240, 640 + i * 16);
+  });
 }
 
-function drawCornerTick(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  size: number,
-  color: string,
-  corner = 'tl'
-) {
-  const dirs: Record<string, [number, number]> = {
-    tl: [1, 1], tr: [-1, 1], bl: [1, -1], br: [-1, -1],
-  };
-  const [dx, dy] = dirs[corner] || [1, 1];
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 2.5;
-  ctx.lineCap = 'square';
+function drawVerifiedBadge(ctx: CanvasRenderingContext2D, cx: number, cy: number) {
+  const r = 54;
+  ctx.fillStyle = C.bgDeep;
+  ctx.strokeStyle = C.goldDim;
+  ctx.lineWidth = 2;
+  
+  // Scalloped edge
   ctx.beginPath();
-  ctx.moveTo(x + dx * size, y);
-  ctx.lineTo(x, y);
-  ctx.lineTo(x, y + dy * size);
+  for (let i = 0; i < 36; i++) {
+    const angle = (i * Math.PI * 2) / 36;
+    const rad = i % 2 === 0 ? r : r - 6;
+    if (i === 0) ctx.moveTo(cx + Math.cos(angle) * rad, cy + Math.sin(angle) * rad);
+    else ctx.lineTo(cx + Math.cos(angle) * rad, cy + Math.sin(angle) * rad);
+  }
+  ctx.closePath();
+  ctx.fill();
   ctx.stroke();
+
+  // Inner circle
+  ctx.strokeStyle = C.gold;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r - 12, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Text / Icon inside
+  ctx.fillStyle = C.pink;
+  ctx.font = font(22, '400', 'sans-serif');
+  ctx.textAlign = 'center';
+  ctx.fillText('🌴', cx, cy - 2);
+
+  ctx.fillStyle = C.gold;
+  ctx.font = font(10, '700', 'Space Mono, monospace');
+  ctx.fillText('VERIFIED', cx, cy + 15);
 }
 
-function drawDiamond(
-  ctx: CanvasRenderingContext2D,
-  cx: number,
-  cy: number,
-  size: number
-) {
+function drawDiamond(ctx: CanvasRenderingContext2D, cx: number, cy: number, size: number) {
   ctx.beginPath();
   ctx.moveTo(cx, cy - size);
   ctx.lineTo(cx + size, cy);
@@ -760,5 +622,4 @@ function splitTextIntoLines(
   return lines;
 }
 
-// Re-export unused but imported (suppress tree-shake warnings)
 export { splitTextIntoLines };
