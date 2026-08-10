@@ -191,11 +191,11 @@ export async function renderBuilderCard(
   const nameStr = (profile.name || 'YOUR NAME').toUpperCase();
 
   ctx.textAlign = 'center';
-  let nameSz = 86;
-  ctx.font = font(nameSz, '800', 'Barlow Condensed, sans-serif');
-  while (ctx.measureText(nameStr).width > W - 80 && nameSz > 36) {
+  let nameSz = 110;
+  ctx.font = font(nameSz, '900', 'Barlow Condensed, sans-serif');
+  while (ctx.measureText(nameStr).width > W - 100 && nameSz > 48) {
     nameSz -= 2;
-    ctx.font = font(nameSz, '800', 'Barlow Condensed, sans-serif');
+    ctx.font = font(nameSz, '900', 'Barlow Condensed, sans-serif');
   }
   // Drop shadow
   ctx.shadowColor = 'rgba(0,0,0,0.4)';
@@ -210,10 +210,10 @@ export async function renderBuilderCard(
   const roleY = nameY + 28;
   if (profile.role) {
     const roleStr = profile.role.toUpperCase();
-    ctx.font = font(15, '700', 'IBM Plex Mono, monospace');
-    const roleW = Math.min(ctx.measureText(roleStr).width + 40, W - 100);
+    ctx.font = font(18, '700', 'IBM Plex Mono, monospace');
+    const roleW = Math.min(ctx.measureText(roleStr).width + 50, W - 100);
     const roleX = W / 2 - roleW / 2;
-    const rolePillH = 36;
+    const rolePillH = 42;
 
     ctx.fillStyle = C.teal;
     roundedRect(ctx, roleX, roleY, roleW, rolePillH, rolePillH / 2);
@@ -221,14 +221,14 @@ export async function renderBuilderCard(
 
     ctx.fillStyle = C.white;
     ctx.textAlign = 'center';
-    ctx.fillText(truncateText(ctx, roleStr, roleW - 40), W / 2, roleY + 24);
+    ctx.fillText(truncateText(ctx, roleStr, roleW - 50), W / 2, roleY + 27);
   }
 
   // ── Builder title (pink italic style) ─────────────────────────────────────
-  const titleY = roleY + 56;
+  const titleY = roleY + 68;
   if (profile.builderTitle) {
     ctx.fillStyle = C.pink;
-    ctx.font = font(22, '600', 'IBM Plex Sans, sans-serif');
+    ctx.font = font(26, '600', 'IBM Plex Sans, sans-serif');
     ctx.textAlign = 'center';
     ctx.fillStyle = C.pink;
     // Star decorators
@@ -259,9 +259,9 @@ export async function renderBuilderCard(
 
   // Content
   ctx.fillStyle = C.cream;
-  ctx.font = font(20, '600', 'IBM Plex Sans, sans-serif');
+  ctx.font = font(24, '500', 'IBM Plex Sans, sans-serif');
   const shippingText = profile.currentlyShipping || 'Something incredible…';
-  wrapText(ctx, shippingText, shippingPad + 20, shippingY + 52, W - shippingPad * 2 - 40, 26, 2);
+  wrapText(ctx, shippingText, shippingPad + 24, shippingY + 54, W - shippingPad * 2 - 48, 32, 2);
 
   // ── Event info pills ───────────────────────────────────────────────────────
   const pillsY = shippingY + shippingH + 28;
@@ -271,12 +271,12 @@ export async function renderBuilderCard(
     '🌊  GOA RESIDENCY',
   ];
 
-  ctx.font = font(13, '600', 'IBM Plex Mono, monospace');
+  ctx.font = font(18, '600', 'IBM Plex Mono, monospace');
   let totalPillW = 0;
   const pillWidths: number[] = [];
-  const pillPad = 28;
-  const pillH = 38;
-  const pillGap = 12;
+  const pillPad = 32;
+  const pillH = 46;
+  const pillGap = 18;
 
   for (const p of pills) {
     const pw = ctx.measureText(p).width + pillPad * 2;
@@ -296,7 +296,7 @@ export async function renderBuilderCard(
     ctx.stroke();
     ctx.fillStyle = C.cream;
     ctx.textAlign = 'center';
-    ctx.fillText(pills[i], pillX + pw / 2, pillsY + 25);
+    ctx.fillText(pills[i], pillX + pw / 2, pillsY + 28);
     pillX += pw + pillGap;
   }
 
@@ -331,7 +331,7 @@ export async function renderBuilderCard(
 
   // HACKER HOUSE large text
   ctx.fillStyle = C.mustard;
-  ctx.font = font(54, '800', 'Barlow Condensed, sans-serif');
+  ctx.font = font(64, '900', 'Barlow Condensed, sans-serif');
   ctx.textAlign = 'left';
   ctx.shadowColor = 'rgba(0,0,0,0.5)';
   ctx.shadowBlur = 8;
@@ -339,11 +339,11 @@ export async function renderBuilderCard(
   ctx.shadowBlur = 0;
 
   ctx.fillStyle = C.creamDim;
-  ctx.font = font(12, '500', 'IBM Plex Mono, monospace');
+  ctx.font = font(14, '500', 'IBM Plex Mono, monospace');
   ctx.fillText(`28–31 OCTOBER 2026  ·  GOA, INDIA`, emblemCX + emblemR + 20, bottomY + 82);
 
   ctx.fillStyle = C.pink;
-  ctx.font = font(13, '700', 'IBM Plex Mono, monospace');
+  ctx.font = font(15, '700', 'IBM Plex Mono, monospace');
   ctx.fillText('#FrameInGoa', emblemCX + emblemR + 20, bottomY + 108);
 
   // ── QR Code ────────────────────────────────────────────────────────────────
@@ -493,13 +493,13 @@ export async function renderPFPFrame(
   // Name (if provided)
   if (profile.name) {
     ctx.fillStyle = C.cream;
-    ctx.font = font(30, '700', 'IBM Plex Sans, sans-serif');
+    ctx.font = font(42, '900', 'Barlow Condensed, sans-serif');
     ctx.textAlign = 'center';
     const nameStr = profile.name.toUpperCase();
     while (ctx.measureText(nameStr).width > W - 120) {
       // handled via truncation below
     }
-    ctx.fillText(truncateText(ctx, nameStr, W - 120), W / 2, hhY + 44);
+    ctx.fillText(truncateText(ctx, nameStr, W - 120), W / 2, hhY + 50);
   }
 
   // Event info bottom strip
@@ -515,12 +515,12 @@ export async function renderPFPFrame(
   ctx.stroke();
 
   ctx.fillStyle = C.cream;
-  ctx.font = font(15, '600', 'IBM Plex Mono, monospace');
+  ctx.font = font(18, '600', 'IBM Plex Mono, monospace');
   ctx.textAlign = 'center';
   ctx.fillText('28–31 OCTOBER 2026  ·  GOA, INDIA', W / 2, H - 44);
 
   ctx.fillStyle = C.pink;
-  ctx.font = font(13, '600', 'IBM Plex Mono, monospace');
+  ctx.font = font(18, '600', 'IBM Plex Mono, monospace');
   ctx.fillText('#HHGoa2026  ·  #FrameInGoa', W / 2, H - 22);
 
   // ── Outer border ──────────────────────────────────────────────────────────
