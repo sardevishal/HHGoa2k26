@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="10" fill="#08160c"/>
+  <rect x="2" y="2" width="60" height="60" rx="8" fill="none" stroke="#d4a017" stroke-width="2"/>
+  <text x="32" y="24" font-family="sans-serif" font-weight="900" font-size="18" text-anchor="middle" fill="#d4a017">HH</text>
+  <line x1="10" y1="30" x2="54" y2="30" stroke="#2a5030" stroke-width="1"/>
+  <text x="32" y="44" font-family="monospace" font-weight="700" font-size="11" text-anchor="middle" fill="#7a9e7e">GOA</text>
+  <text x="32" y="56" font-family="monospace" font-weight="700" font-size="9" text-anchor="middle" fill="#e91e8c">2026</text>
+</svg>
