@@ -307,24 +307,20 @@ export async function renderBuilderCard(
   const badgeY = bottomY + 20;
   drawVerifiedBadge(ctx, badgeX, badgeY);
 
-  // HACKER HOUSE Official Logo (Center - Bodoni Moda Didone Serif)
+  // Hacker House Text (Center - Alfa Slab One)
   ctx.fillStyle = C.gold;
-  ctx.font = font(78, '900', 'Bodoni Moda, Didot, Georgia, serif');
+  ctx.font = font(56, '400', 'Alfa Slab One, sans-serif');
   ctx.textAlign = 'center';
   ctx.shadowColor = 'rgba(0,0,0,0.5)';
   ctx.shadowOffsetY = 4;
-  ctx.shadowBlur = 4;
-  ctx.fillText('HACKER HOUSE', W / 2, bottomY - 5);
-  ctx.shadowBlur = 0;
+  ctx.fillText('HACKER HOUSE', W / 2, bottomY - 18);
   ctx.shadowOffsetY = 0;
+  ctx.shadowColor = 'transparent';
 
-  // Neon Hindi "गोवा" Overlay (Center - Rozha One Devanagari)
-  ctx.font = font(70, '700', 'Rozha One, Yatra One, Devanagari, serif');
-  ctx.strokeStyle = C.gold;
-  ctx.lineWidth = 3;
-  ctx.strokeText('गोवा', W / 2 + 10, bottomY - 15);
+  // Small Hindi "गोवा" Text below "HACKER HOUSE"
   ctx.fillStyle = C.pink;
-  ctx.fillText('गोवा', W / 2 + 10, bottomY - 15);
+  ctx.font = font(26, '700', 'Rozha One, Yatra One, Devanagari, serif');
+  ctx.fillText('गोवा', W / 2, bottomY + 12);
 
   // Sub-bar Text
   ctx.fillStyle = C.gold;
@@ -333,7 +329,7 @@ export async function renderBuilderCard(
 
   ctx.fillStyle = C.pink;
   ctx.font = font(14, '700', 'Space Mono, monospace');
-  ctx.fillText('#FrameInGoa', W / 2, bottomY + 68);
+  ctx.fillText('#FrameInGoa', W / 2, bottomY + 64);
 
   // QR Code Panel (Right - High contrast scanner ready)
   const qrX = W - 230;
@@ -452,25 +448,22 @@ export async function renderPFPFrame(
   // Bottom Official Logo Branding
   const hhY = H - 120;
   ctx.fillStyle = C.gold;
-  ctx.font = font(80, '900', 'Bodoni Moda, Didot, Georgia, serif');
+  ctx.font = font(76, '400', 'Alfa Slab One, sans-serif');
   ctx.textAlign = 'center';
   ctx.shadowColor = 'rgba(0,0,0,0.6)';
   ctx.shadowOffsetY = 6;
-  ctx.fillText('HACKER HOUSE', W / 2, hhY);
+  ctx.fillText('HACKER HOUSE', W / 2, hhY - 15);
   ctx.shadowOffsetY = 0;
   ctx.shadowColor = 'transparent';
 
-  // Neon Hindi "गोवा" Overlay
-  ctx.font = font(72, '700', 'Rozha One, Yatra One, Devanagari, serif');
-  ctx.strokeStyle = C.gold;
-  ctx.lineWidth = 3;
-  ctx.strokeText('गोवा', W / 2 + 10, hhY - 10);
+  // Small Hindi "गोवा" Overlay below HACKER HOUSE
+  ctx.font = font(26, '700', 'Rozha One, Yatra One, Devanagari, serif');
   ctx.fillStyle = C.pink;
-  ctx.fillText('गोवा', W / 2 + 10, hhY - 10);
+  ctx.fillText('गोवा', W / 2, hhY + 15);
 
   ctx.fillStyle = C.cream;
   ctx.font = font(18, '700', 'Space Mono, monospace');
-  ctx.fillText('28–31 OCT 2026 • GOA, INDIA', W / 2, hhY + 50);
+  ctx.fillText('28–31 OCT 2026 • GOA, INDIA', W / 2, hhY + 45);
 
   ctx.strokeStyle = C.gold;
   ctx.lineWidth = 4;
