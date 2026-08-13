@@ -9,9 +9,6 @@ interface PfpFramePreviewProps {
   onCanvasReady: (canvas: HTMLCanvasElement) => void;
 }
 
-// Display at 1/3 scale of 1080×1080
-const DISPLAY_SIZE = 360;
-
 const PfpFramePreview: React.FC<PfpFramePreviewProps> = ({
   image,
   profile,
@@ -35,12 +32,10 @@ const PfpFramePreview: React.FC<PfpFramePreviewProps> = ({
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        const dpr = window.devicePixelRatio || 1;
-        canvas.width = DISPLAY_SIZE * dpr;
-        canvas.height = DISPLAY_SIZE * dpr;
-        canvas.style.width = `${DISPLAY_SIZE}px`;
-        canvas.style.height = `${DISPLAY_SIZE}px`;
-        ctx.drawImage(offscreen, 0, 0, canvas.width, canvas.height);
+        // Use full offscreen resolution; CSS handles display size
+        canvas.width = offscreen.width;
+        canvas.height = offscreen.height;
+        ctx.drawImage(offscreen, 0, 0);
 
         onCanvasReady(offscreen);
       } catch (err) {
@@ -59,19 +54,18 @@ const PfpFramePreview: React.FC<PfpFramePreviewProps> = ({
   }, [doRender]);
 
   return (
-    <div style={{ position: 'relative', display: 'inline-block' }}>
+    <div style={{ position: 'relative', display: 'block', width: '100%' }}>
       <canvas
         ref={canvasRef}
-        width={DISPLAY_SIZE}
-        height={DISPLAY_SIZE}
         style={{
           display: 'block',
-          maxWidth: '100%',
+          width: '100%',
           height: 'auto',
           borderRadius: 10,
           boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
           opacity: rendering ? 0.7 : 1,
           transition: 'opacity 0.15s',
+          aspectRatio: '1 / 1',
         }}
         aria-label="PFP Frame live preview"
         role="img"

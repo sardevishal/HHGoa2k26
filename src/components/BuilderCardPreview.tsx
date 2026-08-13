@@ -9,10 +9,6 @@ interface BuilderCardPreviewProps {
   onCanvasReady: (canvas: HTMLCanvasElement) => void;
 }
 
-// Display at 50% scale of the 1080×1350 output
-const DISPLAY_W = 360;
-const DISPLAY_H = 450;
-
 const BuilderCardPreview: React.FC<BuilderCardPreviewProps> = ({
   image,
   profile,
@@ -36,12 +32,11 @@ const BuilderCardPreview: React.FC<BuilderCardPreviewProps> = ({
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        const dpr = window.devicePixelRatio || 1;
-        canvas.width = DISPLAY_W * dpr;
-        canvas.height = DISPLAY_H * dpr;
-        canvas.style.width = `${DISPLAY_W}px`;
-        canvas.style.height = `${DISPLAY_H}px`;
-        ctx.drawImage(offscreen, 0, 0, canvas.width, canvas.height);
+        // Set canvas resolution to match the offscreen canvas (1080×1350)
+        // The display size is controlled purely by CSS (max-width: 100%, height: auto)
+        canvas.width = offscreen.width;
+        canvas.height = offscreen.height;
+        ctx.drawImage(offscreen, 0, 0);
 
         onCanvasReady(offscreen);
       } catch (err) {
@@ -60,19 +55,18 @@ const BuilderCardPreview: React.FC<BuilderCardPreviewProps> = ({
   }, [doRender]);
 
   return (
-    <div style={{ position: 'relative', display: 'inline-block' }}>
+    <div style={{ position: 'relative', display: 'block', width: '100%' }}>
       <canvas
         ref={canvasRef}
-        width={DISPLAY_W}
-        height={DISPLAY_H}
         style={{
           display: 'block',
-          maxWidth: '100%',
+          width: '100%',
           height: 'auto',
           borderRadius: 10,
           boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
           opacity: rendering ? 0.7 : 1,
           transition: 'opacity 0.15s',
+          aspectRatio: '1080 / 1350',
         }}
         aria-label="Builder ID Card live preview"
         role="img"

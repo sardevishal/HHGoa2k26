@@ -22,12 +22,12 @@ export const DEFAULT_CROP: CropSettings = {
 };
 
 export const DEFAULT_PROFILE: ProfileData = {
-  name: 'Vishal Sarde',
-  age: '21',
-  role: 'Full Stack Development',
-  currentlyShipping: 'AI code review tool',
-  builderTitle: 'Jungle Refactoring Pioneer',
-  githubUsername: 'sardevisal',
+  name: '',
+  age: '',
+  role: '',
+  currentlyShipping: '',
+  builderTitle: '',
+  githubUsername: '',
 };
 
 export const BUILDER_TITLES = [

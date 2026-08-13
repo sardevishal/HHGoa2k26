@@ -119,32 +119,33 @@ export async function renderBuilderCard(
   // Top Hook
   ctx.fillStyle = C.bgDeep;
   ctx.beginPath();
-  ctx.arc(W / 2, 44, 20, 0, Math.PI * 2);
+  ctx.arc(W / 2, 40, 18, 0, Math.PI * 2);
   ctx.fill();
   ctx.strokeStyle = C.black;
-  ctx.lineWidth = 6;
+  ctx.lineWidth = 5;
   ctx.beginPath();
-  ctx.arc(W / 2, 44, 12, 0, Math.PI * 2);
+  ctx.arc(W / 2, 40, 10, 0, Math.PI * 2);
   ctx.stroke();
 
-  // Top Pill
-  const pillY = 70;
+  // Top Pill — Enlarged, bold & prominent
+  const pillY = 55;
+  const pillH = 48;
   ctx.fillStyle = C.bgDeep;
-  ctx.strokeStyle = C.goldDim;
-  ctx.lineWidth = 2;
-  roundedRect(ctx, 60, pillY, W - 120, 36, 8);
+  ctx.strokeStyle = C.gold;
+  ctx.lineWidth = 2.5;
+  roundedRect(ctx, 50, pillY, W - 100, pillH, 10);
   ctx.fill();
   ctx.stroke();
 
   ctx.fillStyle = C.gold;
-  ctx.font = font(14, '700', 'Space Mono, monospace');
+  ctx.font = font(20, '700', 'Space Mono, monospace');
   ctx.textAlign = 'center';
-  ctx.fillText('🌴  HACKER HOUSE GOA 2026  •  BUILDER RESIDENCY PASS  🌴', W / 2, pillY + 23);
+  ctx.fillText('🌴  HACKER HOUSE GOA 2026  •  BUILDER RESIDENCY PASS  🌴', W / 2, pillY + 31);
 
   // ── Profile Image ──────────────────────────────────────────────────────────
-  const imgSize = 460;
+  const imgSize = 360;
   const imgX = (W - imgSize) / 2;
-  const imgY = 125;
+  const imgY = 118;
   const imgR = 20;
 
   // Pink targeting brackets
@@ -173,11 +174,17 @@ export async function renderBuilderCard(
     ctx.fillStyle = C.bgPanel;
     roundedRect(ctx, imgX, imgY, imgSize, imgSize, imgR);
     ctx.fill();
+    
+    // Placeholder icon inside image area
+    ctx.fillStyle = 'rgba(255,225,0,0.3)';
+    ctx.font = font(72, '400', 'sans-serif');
+    ctx.textAlign = 'center';
+    ctx.fillText('📷', W / 2, imgY + imgSize / 2 + 24);
   }
 
-  // Age Badge
-  if (profile.age) {
-    const ageR = 44;
+  // Age Badge — positioned inside corner of image
+  if (profile.age && profile.age.trim()) {
+    const ageR = 36;
     const ageCX = imgX + imgSize - 20;
     const ageCY = imgY + imgSize - 20;
 
@@ -190,146 +197,152 @@ export async function renderBuilderCard(
     ctx.stroke();
 
     ctx.fillStyle = C.white;
-    ctx.font = font(32, '900', 'Alfa Slab One, sans-serif');
+    ctx.font = font(26, '900', 'Alfa Slab One, sans-serif');
     ctx.textAlign = 'center';
-    ctx.fillText(profile.age, ageCX, ageCY + 8);
+    ctx.fillText(profile.age.trim(), ageCX, ageCY + 6);
     
-    ctx.font = font(11, '700', 'Space Mono, monospace');
-    ctx.fillText('YRS OLD', ageCX, ageCY + 24);
+    ctx.font = font(10, '700', 'Space Mono, monospace');
+    ctx.fillText('YRS OLD', ageCX, ageCY + 19);
   }
 
-  // ── Typography Section ─────────────────────────────────────────────────────
-  let currentY = imgY + imgSize + 65;
+  // ── Typography Section ─────────────────────────────────────────────────
+  // Generous gap below photo frame (bottom of photo is 118+360=478, currentY=565 -> 87px gap)
+  let currentY = 565;
 
-  // NAME
+  // BUILDER NAME — Controlled size (52px max), positioned down with wide top gap
+  const nameStr = (profile.name && profile.name.trim()) ? profile.name.trim().toUpperCase() : 'YOUR NAME';
+  const maxNameW = W - 100;
+  let nameFontSize = 52;
+  ctx.font = font(nameFontSize, '400', 'Alfa Slab One, sans-serif');
+  while (ctx.measureText(nameStr).width > maxNameW && nameFontSize > 28) {
+    nameFontSize -= 2;
+    ctx.font = font(nameFontSize, '400', 'Alfa Slab One, sans-serif');
+  }
   ctx.fillStyle = C.gold;
-  const nameStr = (profile.name || 'YOUR NAME').toUpperCase();
-  ctx.font = font(72, '400', 'Alfa Slab One, sans-serif');
-  // Block shadow
-  ctx.shadowColor = 'rgba(0,0,0,0.6)';
-  ctx.shadowOffsetY = 5;
+  ctx.shadowColor = 'rgba(0,0,0,0.7)';
+  ctx.shadowOffsetY = 4;
+  ctx.shadowBlur = 4;
   ctx.textAlign = 'center';
-  ctx.fillText(truncateText(ctx, nameStr, W - 100), W / 2, currentY);
+  ctx.fillText(nameStr, W / 2, currentY);
   ctx.shadowOffsetY = 0;
+  ctx.shadowBlur = 0;
   ctx.shadowColor = 'transparent';
-  currentY += 40;
+  currentY += Math.round(nameFontSize * 0.72) + 12;
 
-  // ROLE PILL
-  if (profile.role) {
-    const roleStr = profile.role.toUpperCase();
-    ctx.font = font(16, '700', 'Space Mono, monospace');
-    const roleW = Math.min(ctx.measureText(`⚙  ${roleStr}`).width + 40, W - 120);
-    const roleX = W / 2 - roleW / 2;
-    
-    ctx.fillStyle = C.bgDeep;
-    ctx.strokeStyle = C.greenLight;
-    ctx.lineWidth = 2;
-    roundedRect(ctx, roleX, currentY, roleW, 38, 8);
-    ctx.fill(); ctx.stroke();
-    
-    ctx.fillStyle = C.cream;
-    ctx.textAlign = 'center';
-    ctx.fillText(truncateText(ctx, `⚙  ${roleStr}`, roleW - 20), W / 2, currentY + 25);
-    currentY += 50;
-  }
+  // ROLE PILL — Larger & clearer (21px font)
+  const roleStr = (profile.role && profile.role.trim()) ? profile.role.trim().toUpperCase() : 'FULL STACK BUILDER';
+  ctx.font = font(21, '700', 'Space Mono, monospace');
+  const roleW = Math.min(ctx.measureText(`⚙  ${roleStr}`).width + 54, W - 100);
+  const roleX = W / 2 - roleW / 2;
+  
+  ctx.fillStyle = C.bgDeep;
+  ctx.strokeStyle = C.greenLight;
+  ctx.lineWidth = 2.5;
+  roundedRect(ctx, roleX, currentY, roleW, 48, 10);
+  ctx.fill(); ctx.stroke();
+  
+  ctx.fillStyle = C.cream;
+  ctx.textAlign = 'center';
+  ctx.fillText(truncateText(ctx, `⚙  ${roleStr}`, roleW - 24), W / 2, currentY + 31);
+  currentY += 64;
 
-  // TITLE
-  if (profile.builderTitle) {
-    currentY += 5;
-    ctx.fillStyle = C.pink;
-    ctx.font = `italic ${font(22, '700', 'Space Grotesk, sans-serif')}`;
-    ctx.textAlign = 'center';
-    ctx.fillText(truncateText(ctx, `⚡  ${profile.builderTitle}  ⚡`, W - 120), W / 2, currentY + 18);
-    currentY += 45;
-  }
+  // BUILDER TITLE — Larger & bold (28px font)
+  const titleStr = (profile.builderTitle && profile.builderTitle.trim()) ? profile.builderTitle.trim() : 'Jungle Refactoring Pioneer';
+  ctx.fillStyle = C.pink;
+  ctx.font = `italic ${font(28, '700', 'Space Grotesk, sans-serif')}`;
+  ctx.textAlign = 'center';
+  ctx.fillText(truncateText(ctx, `⚡  ${titleStr}  ⚡`, W - 100), W / 2, currentY + 22);
+  currentY += 52;
 
-  // SHIPPING PANEL
-  const shippingPad = 120;
+  // CURRENTLY SHIPPING PANEL — Enlarged headline & text
+  const shippingPad = 60;
   const shippingW = W - shippingPad * 2;
   ctx.fillStyle = C.bgDeep;
   ctx.strokeStyle = C.pink;
-  ctx.lineWidth = 2;
-  roundedRect(ctx, shippingPad, currentY, shippingW, 76, 12);
+  ctx.lineWidth = 2.5;
+  roundedRect(ctx, shippingPad, currentY, shippingW, 86, 14);
   ctx.fill(); ctx.stroke();
 
   ctx.fillStyle = C.pink;
-  ctx.font = font(11, '700', 'Space Mono, monospace');
+  ctx.font = font(16, '700', 'Space Mono, monospace');
   ctx.textAlign = 'center';
-  ctx.fillText('🚀 CURRENTLY SHIPPING AT HH GOA', W / 2, currentY + 24);
+  ctx.fillText('🚀 CURRENTLY SHIPPING AT HH GOA', W / 2, currentY + 26);
 
   ctx.fillStyle = C.white;
-  ctx.font = font(24, '700', 'Space Mono, monospace');
-  const shippingText = profile.currentlyShipping || 'Something incredible...';
-  ctx.fillText(truncateText(ctx, shippingText, shippingW - 40), W / 2, currentY + 56);
-  currentY += 95;
+  ctx.font = font(26, '700', 'Space Mono, monospace');
+  const shippingText = (profile.currentlyShipping && profile.currentlyShipping.trim()) ? profile.currentlyShipping.trim() : 'Building something epic...';
+  ctx.fillText(truncateText(ctx, shippingText, shippingW - 40), W / 2, currentY + 62);
+  currentY += 104;
 
-  // EVENT PILLS (Positioned safely above separator and mountains)
+  // EVENT PILLS — Larger text (17px font) & taller pills (40px)
   const pills = [
     '🏝️ BEACH & CODE',
     '🗓️ OCT 28-31, 2026',
     '🌊 GOA RESIDENCY',
   ];
-  ctx.font = font(14, '700', 'Space Mono, monospace');
-  const pillWidths = pills.map(p => ctx.measureText(p).width + 30);
-  const totalPillW = pillWidths.reduce((a, b) => a + b, 0) + 32; // 16px gap
+  ctx.font = font(17, '700', 'Space Mono, monospace');
+  const pillWidths = pills.map(p => ctx.measureText(p).width + 36);
+  const totalPillW = pillWidths.reduce((a, b) => a + b, 0) + 24; // 12px gap each
   
   let pillX = (W - totalPillW) / 2;
   for (let i = 0; i < pills.length; i++) {
     ctx.fillStyle = C.bgDeep;
     ctx.strokeStyle = C.gold;
-    ctx.lineWidth = 1.5;
-    roundedRect(ctx, pillX, currentY, pillWidths[i], 36, 18);
+    ctx.lineWidth = 2;
+    roundedRect(ctx, pillX, currentY, pillWidths[i], 40, 20);
     ctx.fill(); ctx.stroke();
     
     ctx.fillStyle = C.cream;
     ctx.textAlign = 'center';
-    ctx.fillText(pills[i], pillX + pillWidths[i] / 2, currentY + 23);
-    pillX += pillWidths[i] + 16;
+    ctx.fillText(pills[i], pillX + pillWidths[i] / 2, currentY + 26);
+    pillX += pillWidths[i] + 12;
   }
 
   // ── Separator Line ────────────────────────────────────────────────────────
-  const lineY = currentY + 60;
+  const lineY = currentY + 48;
   ctx.strokeStyle = C.gold;
   ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(200, lineY); ctx.lineTo(W - 200, lineY); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(140, lineY); ctx.lineTo(W - 140, lineY); ctx.stroke();
   ctx.fillStyle = C.gold;
-  drawDiamond(ctx, 200, lineY, 5);
-  drawDiamond(ctx, W - 200, lineY, 5);
+  drawDiamond(ctx, 140, lineY, 5);
+  drawDiamond(ctx, W - 140, lineY, 5);
 
   // ── Bottom Angular Mountains (Rendered BELOW the separator line) ─────────
-  drawMountains(ctx, W, H, lineY + 20);
+  drawMountains(ctx, W, H, lineY + 10);
 
   // ── Bottom Official Branding Area (Matches Official Website Logo) ──────────
-  const bottomY = H - 150;
+  const bottomY = H - 135;
 
   // Verified Badge (Left)
   const badgeX = 140;
   const badgeY = bottomY + 20;
   drawVerifiedBadge(ctx, badgeX, badgeY);
 
-  // Hacker House Text (Center - Alfa Slab One)
+  // Hacker House Text (Center - Alfa Slab One) — Large & Bold
   ctx.fillStyle = C.gold;
-  ctx.font = font(56, '400', 'Alfa Slab One, sans-serif');
+  ctx.font = font(68, '400', 'Alfa Slab One, sans-serif');
   ctx.textAlign = 'center';
-  ctx.shadowColor = 'rgba(0,0,0,0.5)';
-  ctx.shadowOffsetY = 4;
-  ctx.fillText('HACKER HOUSE', W / 2, bottomY - 18);
+  ctx.shadowColor = 'rgba(0,0,0,0.8)';
+  ctx.shadowOffsetY = 5;
+  ctx.shadowBlur = 10;
+  ctx.fillText('HACKER HOUSE', W / 2, bottomY - 10);
   ctx.shadowOffsetY = 0;
+  ctx.shadowBlur = 0;
   ctx.shadowColor = 'transparent';
 
   // Small Hindi "गोवा" Text below "HACKER HOUSE"
   ctx.fillStyle = C.pink;
-  ctx.font = font(26, '700', 'Rozha One, Yatra One, Devanagari, serif');
-  ctx.fillText('गोवा', W / 2, bottomY + 12);
+  ctx.font = font(30, '700', 'Rozha One, Yatra One, Devanagari, serif');
+  ctx.fillText('गोवा', W / 2, bottomY + 22);
 
   // Sub-bar Text
   ctx.fillStyle = C.gold;
-  ctx.font = font(15, '700', 'Space Mono, monospace');
-  ctx.fillText('GOA, INDIA   •   28 - 31 OCT 2026', W / 2, bottomY + 40);
+  ctx.font = font(17, '700', 'Space Mono, monospace');
+  ctx.fillText('GOA, INDIA   •   28 - 31 OCT 2026', W / 2, bottomY + 52);
 
   ctx.fillStyle = C.pink;
-  ctx.font = font(14, '700', 'Space Mono, monospace');
-  ctx.fillText('#FrameInGoa', W / 2, bottomY + 64);
+  ctx.font = font(16, '700', 'Space Mono, monospace');
+  ctx.fillText('#FrameInGoa', W / 2, bottomY + 76);
 
   // QR Code Panel (Right - High contrast scanner ready)
   const qrX = W - 230;
@@ -341,7 +354,7 @@ export async function renderBuilderCard(
   roundedRect(ctx, qrX, qrY, qrW, qrH, 12);
   ctx.fill();
 
-  const handle = profile.githubUsername || 'sardevishal';
+  const handle = profile.githubUsername ? profile.githubUsername.trim() : 'sardevishal';
   const qrImg = await generateQRDataURL(handle);
   if (qrImg) {
     ctx.drawImage(qrImg, qrX + 10, qrY + 10, 130, 130);
@@ -392,9 +405,9 @@ export async function renderPFPFrame(
 
   drawGrain(ctx, W, H, 0.015);
 
-  const circleR = 360;
+  const circleR = 345;
   const circleCX = W / 2;
-  const circleCY = H / 2 - 40;
+  const circleCY = H / 2 - 20;
 
   // Targeting Brackets inside PFP
   ctx.strokeStyle = C.pink;
@@ -431,39 +444,43 @@ export async function renderPFPFrame(
   }
   ctx.restore();
 
-  // Top Hook Pill
-  const pillY = 30;
+  // Top Hook Pill — Very large, bold & high visibility (#FrameInGoa)
+  const pillY = 32;
+  const pillW = 400;
+  const pillH = 56;
   ctx.fillStyle = C.bgDeep;
-  ctx.strokeStyle = C.goldDim;
-  ctx.lineWidth = 2;
-  roundedRect(ctx, W / 2 - 140, pillY, 280, 44, 8);
+  ctx.strokeStyle = C.gold;
+  ctx.lineWidth = 2.5;
+  roundedRect(ctx, W / 2 - pillW / 2, pillY, pillW, pillH, 12);
   ctx.fill();
   ctx.stroke();
 
   ctx.fillStyle = C.gold;
-  ctx.font = font(16, '700', 'Space Mono, monospace');
+  ctx.font = font(26, '700', 'Space Mono, monospace');
   ctx.textAlign = 'center';
-  ctx.fillText('🌴 #FrameInGoa 🌴', W / 2, pillY + 28);
+  ctx.fillText('🌴 #FrameInGoa 🌴', W / 2, pillY + 37);
 
-  // Bottom Official Logo Branding
-  const hhY = H - 120;
+  // Bottom Official Logo Branding — Positioned lower down, large & bold
+  const hhY = H - 90;
   ctx.fillStyle = C.gold;
-  ctx.font = font(76, '400', 'Alfa Slab One, sans-serif');
+  ctx.font = font(72, '400', 'Alfa Slab One, sans-serif');
   ctx.textAlign = 'center';
-  ctx.shadowColor = 'rgba(0,0,0,0.6)';
+  ctx.shadowColor = 'rgba(0,0,0,0.8)';
   ctx.shadowOffsetY = 6;
+  ctx.shadowBlur = 8;
   ctx.fillText('HACKER HOUSE', W / 2, hhY - 15);
   ctx.shadowOffsetY = 0;
+  ctx.shadowBlur = 0;
   ctx.shadowColor = 'transparent';
 
   // Small Hindi "गोवा" Overlay below HACKER HOUSE
-  ctx.font = font(26, '700', 'Rozha One, Yatra One, Devanagari, serif');
+  ctx.font = font(30, '700', 'Rozha One, Yatra One, Devanagari, serif');
   ctx.fillStyle = C.pink;
-  ctx.fillText('गोवा', W / 2, hhY + 15);
+  ctx.fillText('गोवा', W / 2, hhY + 20);
 
   ctx.fillStyle = C.cream;
-  ctx.font = font(18, '700', 'Space Mono, monospace');
-  ctx.fillText('28–31 OCT 2026 • GOA, INDIA', W / 2, hhY + 45);
+  ctx.font = font(22, '700', 'Space Mono, monospace');
+  ctx.fillText('28–31 OCT 2026 • GOA, INDIA', W / 2, hhY + 52);
 
   ctx.strokeStyle = C.gold;
   ctx.lineWidth = 4;
